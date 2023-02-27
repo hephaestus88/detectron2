@@ -4,7 +4,6 @@
 """
 This file contains components with some default boilerplate logic user may need
 in training / testing. They will not work for everyone, but many users may find them useful.
-
 The behavior of functions/classes in this file is subject to change,
 since they are meant to represent the "common default behavior" people need in their projects.
 """
@@ -60,7 +59,6 @@ __all__ = [
 def create_ddp_model(model, *, fp16_compression=False, **kwargs):
     """
     Create a DistributedDataParallel model if there are >1 processes.
-
     Args:
         model: a torch.nn.Module
         fp16_compression: add fp16 compression hooks to the ddp object.
@@ -82,10 +80,8 @@ def create_ddp_model(model, *, fp16_compression=False, **kwargs):
 def default_argument_parser(epilog=None):
     """
     Create a parser with some common arguments used by detectron2 users.
-
     Args:
         epilog (str): epilog passed to ArgumentParser describing the usage.
-
     Returns:
         argparse.ArgumentParser:
     """
@@ -93,13 +89,10 @@ def default_argument_parser(epilog=None):
         epilog=epilog
         or f"""
 Examples:
-
 Run on single machine:
     $ {sys.argv[0]} --num-gpus 8 --config-file cfg.yaml
-
 Change some config options:
     $ {sys.argv[0]} --config-file cfg.yaml MODEL.WEIGHTS /path/to/weight.pth SOLVER.BASE_LR 0.001
-
 Run on multiple machines:
     (machine0)$ {sys.argv[0]} --machine-rank 0 --num-machines 2 --dist-url <URL> [--other-flags]
     (machine1)$ {sys.argv[0]} --machine-rank 1 --num-machines 2 --dist-url <URL> [--other-flags]
@@ -114,11 +107,23 @@ Run on multiple machines:
         "See documentation of `DefaultTrainer.resume_or_load()` for what it means.",
     )
     parser.add_argument("--eval-only", action="store_true", help="perform evaluation only")
+    parser.add_argument("--demo-only", action="store_true", help="perform demo on test imgs only")
     parser.add_argument("--num-gpus", type=int, default=1, help="number of gpus *per machine*")
     parser.add_argument("--num-machines", type=int, default=1, help="total number of machines")
     parser.add_argument(
         "--machine-rank", type=int, default=0, help="the rank of this machine (unique per machine)"
     )
+    parser.add_argument('-device', '--device', default='cuda',
+                        type=str, help='denoise method: ["cuda", "cpu"]')
+    parser.add_argument('--number', default=3,
+                        type=int, help='number of detection classes(w/o) background')
+    parser.add_argument('--cfg_fp', default='COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
+                        type=str, help='configure file path for model')
+    parser.add_argument('--ckpt_url', default='COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
+                        type=str, help='weight of the checkpoint for model')
+    parser.add_argument('--output', default='./output/object_detection',
+                        type=str, help='output for the model training')
+
 
     # PyTorch still may leave orphan processes in multi-gpu training.
     # Therefore we use a deterministic way to obtain port,
@@ -174,11 +179,9 @@ def _highlight(code, filename):
 def default_setup(cfg, args):
     """
     Perform some basic common setups at the beginning of a job, including:
-
     1. Set up the detectron2 logger
     2. Log basic information about environment, cmdline arguments, and config
     3. Backup the config to the output directory
-
     Args:
         cfg (CfgNode or omegaconf.DictConfig): the full config to be used
         args (argparse.NameSpace): the command line arguments to be logged
@@ -232,11 +235,9 @@ def default_writers(output_dir: str, max_iter: Optional[int] = None):
     Build a list of :class:`EventWriter` to be used.
     It now consists of a :class:`CommonMetricPrinter`,
     :class:`TensorboardXWriter` and :class:`JSONWriter`.
-
     Args:
         output_dir: directory to store JSON metrics and tensorboard events
         max_iter: the total number of iterations
-
     Returns:
         list[EventWriter]: a list of :class:`EventWriter` objects.
     """
@@ -253,23 +254,18 @@ class DefaultPredictor:
     """
     Create a simple end-to-end predictor with the given config that runs on
     single device for a single input image.
-
     Compared to using the model directly, this class does the following additions:
-
     1. Load checkpoint from `cfg.MODEL.WEIGHTS`.
     2. Always take BGR image as the input and apply conversion defined by `cfg.INPUT.FORMAT`.
     3. Apply resizing defined by `cfg.INPUT.{MIN,MAX}_SIZE_TEST`.
     4. Take one input image and produce a single output, instead of a batch.
-
     This is meant for simple demo purposes, so it does the above steps automatically.
     This is not meant for benchmarks or running complicated inference logic.
     If you'd like to do anything more complicated, please refer to its source code as
     examples to build and use the model manually.
-
     Attributes:
         metadata (Metadata): the metadata of the underlying dataset, obtained from
             cfg.DATASETS.TEST.
-
     Examples:
     ::
         pred = DefaultPredictor(cfg)
@@ -298,7 +294,6 @@ class DefaultPredictor:
         """
         Args:
             original_image (np.ndarray): an image of shape (H, W, C) (in BGR order).
-
         Returns:
             predictions (dict):
                 the output of the model for one image only.
@@ -321,40 +316,32 @@ class DefaultPredictor:
 class DefaultTrainer(TrainerBase):
     """
     A trainer with default training logic. It does the following:
-
     1. Create a :class:`SimpleTrainer` using model, optimizer, dataloader
        defined by the given config. Create a LR scheduler defined by the config.
     2. Load the last checkpoint or `cfg.MODEL.WEIGHTS`, if exists, when
        `resume_or_load` is called.
     3. Register a few common hooks defined by the config.
-
     It is created to simplify the **standard model training workflow** and reduce code boilerplate
     for users who only need the standard training workflow, with standard features.
     It means this class makes *many assumptions* about your training logic that
     may easily become invalid in a new research. In fact, any assumptions beyond those made in the
     :class:`SimpleTrainer` are too much for research.
-
     The code of this class has been annotated about restrictive assumptions it makes.
     When they do not work for you, you're encouraged to:
-
     1. Overwrite methods of this class, OR:
     2. Use :class:`SimpleTrainer`, which only does minimal SGD training and
        nothing else. You can then add your own hooks if needed. OR:
     3. Write your own training loop similar to `tools/plain_train_net.py`.
-
     See the :doc:`/tutorials/training` tutorials for more details.
-
     Note that the behavior of this class, like other functions/classes in
     this file, is not stable, since it is meant to represent the "common default behavior".
     It is only guaranteed to work well with the standard models and training workflow in detectron2.
     To obtain more stable behavior, write your own training logic with other public APIs.
-
     Examples:
     ::
         trainer = DefaultTrainer(cfg)
         trainer.resume_or_load()  # load last checkpoint or MODEL.WEIGHTS
         trainer.train()
-
     Attributes:
         scheduler:
         checkpointer (DetectionCheckpointer):
@@ -401,11 +388,9 @@ class DefaultTrainer(TrainerBase):
         a `last_checkpoint` file), resume from the file. Resuming means loading all
         available states (eg. optimizer and scheduler) and update iteration counter
         from the checkpoint. ``cfg.MODEL.WEIGHTS`` will not be used.
-
         Otherwise, this is considered as an independent training. The method will load model
         weights from the file `cfg.MODEL.WEIGHTS` (but will not load other states) and start
         from iteration 0.
-
         Args:
             resume (bool): whether to do resume or not
         """
@@ -419,7 +404,6 @@ class DefaultTrainer(TrainerBase):
         """
         Build a list of default hooks, including timing, evaluation,
         checkpointing, lr scheduling, precise BN, writing events.
-
         Returns:
             list[HookBase]:
         """
@@ -468,7 +452,6 @@ class DefaultTrainer(TrainerBase):
         Build a list of writers to be used using :func:`default_writers()`.
         If you'd like a different list of writers, you can overwrite it in
         your trainer.
-
         Returns:
             list[EventWriter]: a list of :class:`EventWriter` objects.
         """
@@ -477,7 +460,6 @@ class DefaultTrainer(TrainerBase):
     def train(self):
         """
         Run training.
-
         Returns:
             OrderedDict of results, if evaluation is enabled. Otherwise None.
         """
@@ -507,7 +489,6 @@ class DefaultTrainer(TrainerBase):
         """
         Returns:
             torch.nn.Module:
-
         It now calls :func:`detectron2.modeling.build_model`.
         Overwrite it if you'd like a different model.
         """
@@ -521,7 +502,6 @@ class DefaultTrainer(TrainerBase):
         """
         Returns:
             torch.optim.Optimizer:
-
         It now calls :func:`detectron2.solver.build_optimizer`.
         Overwrite it if you'd like a different optimizer.
         """
@@ -540,7 +520,6 @@ class DefaultTrainer(TrainerBase):
         """
         Returns:
             iterable
-
         It now calls :func:`detectron2.data.build_detection_train_loader`.
         Overwrite it if you'd like a different data loader.
         """
@@ -551,7 +530,6 @@ class DefaultTrainer(TrainerBase):
         """
         Returns:
             iterable
-
         It now calls :func:`detectron2.data.build_detection_test_loader`.
         Overwrite it if you'd like a different data loader.
         """
@@ -562,7 +540,6 @@ class DefaultTrainer(TrainerBase):
         """
         Returns:
             DatasetEvaluator or None
-
         It is not implemented by default.
         """
         raise NotImplementedError(
@@ -578,14 +555,12 @@ Alternatively, you can call evaluation functions yourself (see Colab balloon tut
         """
         Evaluate the given model. The given model is expected to already contain
         weights to evaluate.
-
         Args:
             cfg (CfgNode):
             model (nn.Module):
             evaluators (list[DatasetEvaluator] or None): if None, will call
                 :meth:`build_evaluator`. Otherwise, must have the same length as
                 ``cfg.DATASETS.TEST``.
-
         Returns:
             dict: a dict of result metrics
         """
@@ -637,37 +612,28 @@ Alternatively, you can call evaluation functions yourself (see Colab balloon tut
         workers currently in use, returns a new cfg where the total batch size
         is scaled so that the per-GPU batch size stays the same as the
         original ``IMS_PER_BATCH // REFERENCE_WORLD_SIZE``.
-
         Other config options are also scaled accordingly:
         * training steps and warmup steps are scaled inverse proportionally.
         * learning rate are scaled proportionally, following :paper:`ImageNet in 1h`.
-
         For example, with the original config like the following:
-
         .. code-block:: yaml
-
             IMS_PER_BATCH: 16
             BASE_LR: 0.1
             REFERENCE_WORLD_SIZE: 8
             MAX_ITER: 5000
             STEPS: (4000,)
             CHECKPOINT_PERIOD: 1000
-
         When this config is used on 16 GPUs instead of the reference number 8,
         calling this method will return a new config with:
-
         .. code-block:: yaml
-
             IMS_PER_BATCH: 32
             BASE_LR: 0.2
             REFERENCE_WORLD_SIZE: 16
             MAX_ITER: 2500
             STEPS: (2000,)
             CHECKPOINT_PERIOD: 500
-
         Note that both the original config and this new config can be trained on 16 GPUs.
         It's up to user whether to enable this feature (by setting ``REFERENCE_WORLD_SIZE``).
-
         Returns:
             CfgNode: a new config. Same as original if ``cfg.SOLVER.REFERENCE_WORLD_SIZE==0``.
         """
