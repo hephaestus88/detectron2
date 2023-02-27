@@ -12,6 +12,7 @@ from detectron2.layers import (
     ModulatedDeformConv,
     ShapeSpec,
     get_norm,
+    CBAM,
 )
 
 from .backbone import Backbone
@@ -35,7 +36,7 @@ class BasicBlock(CNNBlockBase):
     with two 3x3 conv layers and a projection shortcut if needed.
     """
 
-    def __init__(self, in_channels, out_channels, *, stride=1, norm="BN"):
+    def __init__(self, in_channels, out_channels, *, stride=1, norm="BN", attention=""):
         """
         Args:
             in_channels (int): Number of input channels.
@@ -43,8 +44,13 @@ class BasicBlock(CNNBlockBase):
             stride (int): Stride for the first conv.
             norm (str or callable): normalization for all conv layers.
                 See :func:`layers.get_norm` for supported format.
+            activation(str):activation to use.
         """
         super().__init__(in_channels, out_channels, stride)
+
+
+        self.attention = CBAM(out_channels) if attention == "CBAM" else None
+        
 
         if in_channels != out_channels:
             self.shortcut = Conv2d(
@@ -92,8 +98,14 @@ class BasicBlock(CNNBlockBase):
         else:
             shortcut = x
 
+         # attention
+        if self.attention is not None:
+            print("attention is used")
+            out = self.attention(out)
+
         out += shortcut
         out = F.relu_(out)
+
         return out
 
 
@@ -112,6 +124,7 @@ class BottleneckBlock(CNNBlockBase):
         bottleneck_channels,
         stride=1,
         num_groups=1,
+        attention="",
         norm="BN",
         stride_in_1x1=False,
         dilation=1,
@@ -128,6 +141,9 @@ class BottleneckBlock(CNNBlockBase):
             dilation (int): the dilation rate of the 3x3 conv layer.
         """
         super().__init__(in_channels, out_channels, stride)
+
+        self.attention = CBAM(out_channels) if attention == "CBAM" else None
+
 
         if in_channels != out_channels:
             self.shortcut = Conv2d(
@@ -204,6 +220,11 @@ class BottleneckBlock(CNNBlockBase):
             shortcut = self.shortcut(x)
         else:
             shortcut = x
+
+        # attention
+        if self.attention is not None:
+            print("attention is used")
+            out = self.attention(out)
 
         out += shortcut
         out = F.relu_(out)
@@ -692,3 +713,4 @@ def build_resnet_backbone(cfg, input_shape):
         bottleneck_channels *= 2
         stages.append(blocks)
     return ResNet(stem, stages, out_features=out_features, freeze_at=freeze_at)
+
