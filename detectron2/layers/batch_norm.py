@@ -7,7 +7,7 @@ from torch.nn import functional as F
 
 from detectron2.utils import comm, env
 
-from .wrappers import BatchNorm2d
+from .wrappers import BatchNorm2d, InstanceNorm2d
 
 
 class FrozenBatchNorm2d(nn.Module):
@@ -135,6 +135,7 @@ def get_norm(norm, out_channels):
             return None
         norm = {
             "BN": BatchNorm2d,
+            "IN": InstanceNorm2d,
             # Fixed in https://github.com/pytorch/pytorch/pull/36382
             "SyncBN": NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm,
             "FrozenBN": FrozenBatchNorm2d,
