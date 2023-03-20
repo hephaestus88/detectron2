@@ -27,8 +27,8 @@ dataloader.train = L(build_detection_train_loader)(
         image_format="BGR",
         use_instance_mask=True,
     ),
-    total_batch_size=16,
-    num_workers=4,
+    total_batch_size=1,
+    num_workers=1,
 )
 
 dataloader.test = L(build_detection_test_loader)(
@@ -40,7 +40,7 @@ dataloader.test = L(build_detection_test_loader)(
         ],
         image_format="${...train.mapper.image_format}",
     ),
-    num_workers=4,
+    num_workers=1,
 )
 
 dataloader.evaluator = L(COCOEvaluator)(
