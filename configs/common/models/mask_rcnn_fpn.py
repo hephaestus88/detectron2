@@ -52,7 +52,7 @@ model = L(GeneralizedRCNN)(
         nms_thresh=0.7,
     ),
     roi_heads=L(StandardROIHeads)(
-        num_classes=80,
+        num_classes=3,
         batch_size_per_image=512,
         positive_fraction=0.25,
         proposal_matcher=L(Matcher)(
