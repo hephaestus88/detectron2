@@ -649,6 +649,7 @@ def build_resnet_backbone(cfg, input_shape):
 
     # fmt: off
     freeze_at           = cfg.MODEL.BACKBONE.FREEZE_AT
+    attention           = cfg.MODEL.BACKBONE.ATTENTION_MODULE
     out_features        = cfg.MODEL.RESNETS.OUT_FEATURES
     depth               = cfg.MODEL.RESNETS.DEPTH
     num_groups          = cfg.MODEL.RESNETS.NUM_GROUPS
