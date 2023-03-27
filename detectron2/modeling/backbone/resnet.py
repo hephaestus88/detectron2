@@ -693,6 +693,7 @@ def build_resnet_backbone(cfg, input_shape):
             "in_channels": in_channels,
             "out_channels": out_channels,
             "norm": norm,
+            "attention": attention,
         }
         # Use BasicBlock for R18 and R34.
         if depth in [18, 34]:
