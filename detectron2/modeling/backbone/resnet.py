@@ -100,7 +100,7 @@ class BasicBlock(CNNBlockBase):
 
          # attention
         if self.attention is not None:
-            print("attention is used")
+            # print("attention is used")
             out = self.attention(out)
 
         out += shortcut
@@ -223,7 +223,7 @@ class BottleneckBlock(CNNBlockBase):
 
         # attention
         if self.attention is not None:
-            print("attention is used")
+            # print("attention is used")
             out = self.attention(out)
 
         out += shortcut
