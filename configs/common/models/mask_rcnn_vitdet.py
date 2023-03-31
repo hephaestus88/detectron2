@@ -50,9 +50,7 @@ model.backbone = L(SimpleFeaturePyramid)(
 )
 
 model.roi_heads.box_head.conv_norm = model.roi_heads.mask_head.conv_norm = "LN"
-model.roi_heads.fast_rcnn.box_reg_loss_type = "giou"
-if model.roi_heads.fast_rcnn.box_reg_loss_type == "giou":
-    print('giou is used for box reg loss')
+
 # 2conv in RPN:
 model.proposal_generator.head.conv_dims = [-1, -1]
 
