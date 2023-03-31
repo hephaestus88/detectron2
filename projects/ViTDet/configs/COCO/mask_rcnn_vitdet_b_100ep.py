@@ -26,7 +26,7 @@ train.max_iter = 3000
 
 lr_multiplier = L(WarmupParamScheduler)(
     scheduler=L(MultiStepParamScheduler)(
-        values=[0.1, 0.01, 0.001],
+        values=[1, 0.1, 0.01],
         milestones=[1000, 1500],
         num_updates=train.max_iter,
     ),
