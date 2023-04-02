@@ -191,7 +191,7 @@ class FastRCNNOutputLayers(nn.Module):
         test_topk_per_image: int = 100,
         cls_agnostic_bbox_reg: bool = False,
         smooth_l1_beta: float = 0.0,
-        box_reg_loss_type: str = "diou",
+        box_reg_loss_type: str = "smooth_l1",
         loss_weight: Union[float, Dict[str, float]] = 1.0,
         use_fed_loss: bool = False,
         use_sigmoid_ce: bool = False,
