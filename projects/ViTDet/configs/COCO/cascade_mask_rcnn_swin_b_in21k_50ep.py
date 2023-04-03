@@ -25,7 +25,7 @@ train.init_checkpoint = "detectron2://ImageNetPretrained/swin/swin_base_patch4_w
 
 # Schedule
 # 100 ep = 184375 iters * 64 images/iter / 118000 images/ep
-train.max_iter = 184375
+train.max_iter = 3000
 lr_multiplier = L(WarmupParamScheduler)(
     scheduler=L(MultiStepParamScheduler)(
         values=[1.0, 0.1, 0.01],
