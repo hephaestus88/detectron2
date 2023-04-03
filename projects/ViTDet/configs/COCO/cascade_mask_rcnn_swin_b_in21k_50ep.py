@@ -15,7 +15,7 @@ model.backbone.bottom_up = L(SwinTransformer)(
     num_heads=[4, 8, 16, 32],
 )
 model.backbone.in_features = ("p0", "p1", "p2", "p3")
-model.backbone.square_pad = 1024
+model.backbone.square_pad = 800
 
 # Initialization and trainer settings
 train = model_zoo.get_config("common/train.py").train
@@ -25,11 +25,11 @@ train.init_checkpoint = "detectron2://ImageNetPretrained/swin/swin_base_patch4_w
 
 # Schedule
 # 100 ep = 184375 iters * 64 images/iter / 118000 images/ep
-train.max_iter = 6000
+train.max_iter = 3000
 lr_multiplier = L(WarmupParamScheduler)(
     scheduler=L(MultiStepParamScheduler)(
         values=[1.0, 0.1, 0.01],
-        milestones=[1000, 2000, 4000],
+        milestones=[1000, 1500],
         num_updates=train.max_iter,
     ),
     warmup_length=250 / train.max_iter,
