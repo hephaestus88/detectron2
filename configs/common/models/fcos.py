@@ -15,7 +15,7 @@ model.backbone.top_block.in_feature = "p5"
 model.backbone.top_block.in_channels = 256
 
 # New score threshold determined based on sqrt(cls_score * centerness)
-model.test_score_thresh = 0.2
+model.test_score_thresh = 0.6
 model.test_nms_thresh = 0.6
 
 model.head._target_ = FCOSHead
