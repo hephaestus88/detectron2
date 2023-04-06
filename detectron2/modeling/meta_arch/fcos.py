@@ -34,7 +34,7 @@ class FCOS(DenseDetector):
         head: nn.Module,
         head_in_features: Optional[List[str]] = None,
         box2box_transform=None,
-        num_classes,
+        num_classes=4,
         center_sampling_radius: float = 1.5,
         focal_loss_alpha=0.25,
         focal_loss_gamma=2.0,
