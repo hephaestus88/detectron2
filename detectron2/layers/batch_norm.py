@@ -118,7 +118,7 @@ class FrozenBatchNorm2d(nn.Module):
         return res
 
 
-def get_norm(norm, out_channels):
+def get_norm(norm="BN", out_channels):
     """
     Args:
         norm (str or callable): either one of BN, SyncBN, FrozenBN, GN;
@@ -133,6 +133,7 @@ def get_norm(norm, out_channels):
     if isinstance(norm, str):
         if len(norm) == 0:
             return None
+        print(f'norm type{norm} is used') 
         norm = {
             "BN": BatchNorm2d,
             "IN": InstanceNorm2d,
