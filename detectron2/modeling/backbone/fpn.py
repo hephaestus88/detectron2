@@ -319,12 +319,6 @@ def build_resnet_fpn_backbone(cfg, input_shape: ShapeSpec):
         top_block=LastLevelMaxPool(),
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
-    backbone = PAN(
-        feature_extractor=backbone,
-        out_channels=out_channels,
-        norm=cfg.MODEL.FPN.NORM,
-        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
-    )
     return backbone
 
 @BACKBONE_REGISTRY.register()
